@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { CreditCard, Plus, ArrowDownLeft, ArrowUpRight, Eye, EyeOff, Lock, ShieldCheck, History } from 'lucide-react';
+import { CreditCard, Plus, ArrowDownLeft, ArrowUpRight, Eye, EyeOff, Lock, ShieldCheck, History, AlertCircle } from 'lucide-react';
 import { UserState } from '../types';
 import VirtualCard from './VirtualCard';
 
@@ -14,6 +14,7 @@ interface CardManagerProps {
 const CardManager: React.FC<CardManagerProps> = ({ user, onCreateCard, onTopUp, onWithdraw }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [amount, setAmount] = useState('');
+  const [error, setError] = useState('');
   const [mode, setMode] = useState<'view' | 'topup' | 'withdraw'>('view');
 
   if (!user.hasCard) {
@@ -58,24 +59,38 @@ const CardManager: React.FC<CardManagerProps> = ({ user, onCreateCard, onTopUp, 
   }
 
   const handleAction = () => {
+    setError('');
     const val = parseFloat(amount);
-    if (isNaN(val) || val <= 0) return;
 
+    // 1. Basic Number Validation
+    if (isNaN(val) || val <= 0) {
+        setError("Por favor ingresa un monto válido mayor a 0.");
+        return;
+    }
+
+    // 2. Balance Validation
     if (mode === 'topup') {
         if (val > user.usdtBalance) {
-            alert("Saldo insuficiente en Billetera Principal.");
+            setError(`Saldo insuficiente en Billetera. Tienes $${user.usdtBalance.toFixed(2)}`);
             return;
         }
         onTopUp(val);
     } else {
         if (val > user.cardBalance) {
-            alert("Saldo insuficiente en la Tarjeta.");
+            setError(`Saldo insuficiente en Tarjeta. Tienes $${user.cardBalance.toFixed(2)}`);
             return;
         }
         onWithdraw(val);
     }
+    
+    // Success State Reset
     setAmount('');
     setMode('view');
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setAmount(e.target.value);
+      if (error) setError(''); // Clear error when typing
   };
 
   return (
@@ -113,14 +128,14 @@ const CardManager: React.FC<CardManagerProps> = ({ user, onCreateCard, onTopUp, 
 
           <div className="grid grid-cols-2 gap-4">
              <button 
-                onClick={() => setMode('topup')}
+                onClick={() => { setMode('topup'); setError(''); setAmount(''); }}
                 className={`p-4 rounded-xl border-2 font-bold flex flex-col items-center gap-2 transition-all ${mode === 'topup' ? 'border-solar-500 bg-solar-50 text-solar-700' : 'border-gray-100 hover:border-solar-200 text-slate-600'}`}
              >
                 <div className="bg-solar-100 p-2 rounded-full text-solar-600"><Plus size={20}/></div>
                 Recargar
              </button>
              <button 
-                onClick={() => setMode('withdraw')}
+                onClick={() => { setMode('withdraw'); setError(''); setAmount(''); }}
                 className={`p-4 rounded-xl border-2 font-bold flex flex-col items-center gap-2 transition-all ${mode === 'withdraw' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-100 hover:border-blue-200 text-slate-600'}`}
              >
                 <div className="bg-blue-100 p-2 rounded-full text-blue-600"><ArrowUpRight size={20}/></div>
@@ -136,21 +151,30 @@ const CardManager: React.FC<CardManagerProps> = ({ user, onCreateCard, onTopUp, 
                         ? `Saldo Disponible en Wallet: $${user.usdtBalance.toFixed(2)}` 
                         : `Saldo Disponible en Tarjeta: $${user.cardBalance.toFixed(2)}`}
                   </p>
+                  
                   <div className="flex gap-2">
                       <div className="relative flex-1">
                           <span className="absolute left-3 top-3 text-gray-400">$</span>
                           <input 
                               type="number" 
                               value={amount}
-                              onChange={(e) => setAmount(e.target.value)}
-                              className="w-full border border-gray-300 rounded-lg py-2.5 pl-6 pr-3 outline-none focus:ring-2 focus:ring-solar-500"
+                              onChange={handleInputChange}
+                              className={`w-full border rounded-lg py-2.5 pl-6 pr-3 outline-none focus:ring-2 focus:ring-solar-500 ${error ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
                               placeholder="0.00"
+                              min="0"
                           />
                       </div>
                       <button onClick={handleAction} className="bg-slate-900 text-white font-bold px-6 rounded-lg hover:bg-slate-800 transition-colors">
                           Confirmar
                       </button>
                   </div>
+                  
+                  {error && (
+                      <div className="flex items-center gap-2 mt-2 text-xs font-bold text-red-500 animate-shake">
+                          <AlertCircle size={14} />
+                          <span>{error}</span>
+                      </div>
+                  )}
               </div>
           )}
        </div>

@@ -44,6 +44,7 @@ export interface Address {
 export interface Order {
   id: string;
   date: string;
+  timestamp: number; // Para simulación de tiempo precisa
   items: CartItem[];
   total: number;
   status: 'procesando' | 'enviado' | 'entregado';
@@ -69,6 +70,7 @@ export interface UserInvestment {
   dailyEarnings: number; // En Monedas
   totalEarnedCoins: number;
   status: 'active' | 'completed';
+  lastPayout?: number; // Timestamp
 }
 
 export interface UserState {
@@ -88,6 +90,7 @@ export interface UserState {
   investments: UserInvestment[];
   reviewedProductIds: string[];
   stockAlerts: string[]; // IDs of products user subscribed to
+  lastConnection: number; // Timestamp para calcular ganancias offline
   // Card Fields
   hasCard: boolean;
   cardBalance: number;
@@ -105,4 +108,13 @@ export interface Transaction {
   status: 'completado' | 'pendiente' | 'fallido';
   date: string;
   details?: string;
+}
+
+// Toast Notification Types
+export type ToastType = 'success' | 'error' | 'info' | 'warning';
+
+export interface ToastMessage {
+  id: string;
+  message: string;
+  type: ToastType;
 }

@@ -175,7 +175,7 @@ const UserProfile: React.FC<UserProfileProps> = ({ user, onBack, onUpdateUser })
                     {copiedRef ? 'Copiado' : 'Copiar Enlace'}
                 </button>
             </div>
-            <p className="text-[10px] text-center text-gray-400">Enlace: https://qvasun.com/ref/{user.referralCode}</p>
+            <p className="text-[10px] text-center text-gray-400">Enlace: qvasun.com/ref/{user.referralCode}</p>
          </div>
       </div>
 

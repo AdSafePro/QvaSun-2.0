@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Star, ShoppingBag, ShieldCheck, Truck, Clock, Eye, Share2, Heart, ChevronLeft, ChevronRight, AlertTriangle, Link, Copy, Check, MessageSquare, Bell, BellRing, Mail } from 'lucide-react';
+import { ArrowLeft, Star, ShoppingBag, ShieldCheck, Truck, Clock, Eye, Share2, Heart, ChevronLeft, ChevronRight, AlertTriangle, Link, Copy, Check, MessageSquare, Bell, BellRing, Mail, Plane, Info } from 'lucide-react';
 import { Product, UserState } from '../types';
 
 interface ProductDetailsProps {
@@ -178,6 +179,43 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, user, onBack, 
         </div>
       </div>
 
+      {/* NEW: Green Shipping Banner (Inclusion & Disclaimer) */}
+      <div className="bg-green-50 border border-green-200 p-3 mx-4 mb-2 rounded-lg flex items-start gap-3 animate-slide-up shadow-sm">
+         <Truck className="text-green-600 flex-shrink-0 mt-0.5" size={20} />
+         <div>
+            <p className="text-sm font-bold text-green-800">Envío Incluido (Puerta a Puerta en Cuba)</p>
+            <p className="text-xs text-green-700 mt-1 leading-relaxed">
+               El precio incluye todos los costos de importación y entrega. <br/>
+               <span className="font-bold flex items-center gap-1 mt-1"><AlertTriangle size={10}/> Importante:</span> Una vez el pedido es recolectado por el transportista, no se aceptan cancelaciones ni reembolsos.
+            </p>
+         </div>
+      </div>
+
+      {/* NEW: Shipping Logistics & Guarantee */}
+      <div className="bg-white p-4 mb-2 shadow-sm animate-slide-up">
+           <h3 className="font-bold text-sm mb-3 flex items-center gap-2 text-slate-800">
+               <Plane size={18} className="text-blue-500"/> Detalles de Envío a Cuba
+           </h3>
+           <div className="space-y-3">
+               <div className="flex justify-between items-center border-b border-gray-50 pb-2">
+                  <span className="text-xs text-gray-500 font-bold uppercase">Destino</span>
+                  <span className="font-bold text-sm text-slate-800 flex items-center gap-1">
+                     🇨🇺 Todos los Municipios
+                  </span>
+               </div>
+               <div className="flex justify-between items-center border-b border-gray-50 pb-2">
+                  <span className="text-xs text-gray-500 font-bold uppercase">Tiempo Estimado</span>
+                  <span className="font-bold text-sm text-slate-800">15 - 25 Días Hábiles</span>
+               </div>
+               <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-2 border border-blue-100">
+                  <ShieldCheck size={16} className="text-blue-600 flex-shrink-0 mt-0.5"/>
+                  <p className="text-xs text-blue-800 leading-snug">
+                     <span className="font-bold">Garantía de Puntualidad:</span> Si tu pedido demora más de 30 días, te reembolsamos el 5% del valor en crédito.
+                  </p>
+               </div>
+           </div>
+      </div>
+
       {/* Affiliate Link Section */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 mb-2 shadow-sm border border-blue-100 animate-slide-up" style={{animationDelay: '0.2s'}}>
          <div className="flex items-center gap-2 mb-2">
@@ -204,7 +242,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, user, onBack, 
           </div>
           <div className="flex flex-col items-center gap-1 text-center w-1/3 border-l border-r border-gray-100 group">
              <Truck className="text-solar-600 group-hover:translate-x-1 transition-transform" />
-             <span className="text-[10px] text-gray-600 font-medium">Envío<br/>Rápido</span>
+             <span className="text-[10px] text-gray-600 font-medium">Envío<br/>Gratis</span>
           </div>
           <div className="flex flex-col items-center gap-1 text-center w-1/3 group">
              <ShieldCheck className="text-green-500 group-hover:scale-110 transition-transform" />

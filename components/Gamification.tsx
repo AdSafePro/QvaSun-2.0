@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Gift, X, Zap, CheckCircle, RotateCw } from 'lucide-react';
+import { Gift, X, Zap, CheckCircle, RotateCw, Clock, ExternalLink, PlayCircle } from 'lucide-react';
 
 interface GamificationProps {
   onClose: () => void;
@@ -177,44 +177,109 @@ const WHEEL_SEGMENTS: WheelSegment[] = [
   { label: '100 Coins', value: 100, color: '#9333ea', text: '100' },
 ];
 
+const AD_LINKS = [
+  "https://t.co/KrAbgCwu6C",
+  "https://t.co/wYAXqNcmmi",
+  "https://t.co/m3FyPkarYK",
+  "https://t.co/qcuZL2idu0",
+  "https://t.co/OJqP6nNA8q",
+  "https://t.co/z8SlYjot0O"
+];
+
 export const SpinWheel: React.FC<{ onClose: () => void, onReward: (coins: number) => void }> = ({ onClose, onReward }) => {
   const [mustSpin, setMustSpin] = useState(false);
   const [rotation, setRotation] = useState(0);
   const [result, setResult] = useState<WheelSegment | null>(null);
+
+  // 24h & Ad Logic State
+  const [canFreeSpin, setCanFreeSpin] = useState(false);
+  const [extraSpinsUsed, setExtraSpinsUsed] = useState(0);
+  const [timeUntilNext, setTimeUntilNext] = useState<string>('');
+  
+  // Ad Watching State
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+  const [adTimer, setAdTimer] = useState(0);
+  const [readyToSpinExtra, setReadyToSpinExtra] = useState(false);
+
+  useEffect(() => {
+    checkAvailability();
+    const interval = setInterval(() => {
+        checkAvailability();
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const checkAvailability = () => {
+      const lastFreeSpin = localStorage.getItem('qvasun_last_free_spin');
+      const extraUsed = parseInt(localStorage.getItem('qvasun_extra_spins') || '0');
+      
+      const now = Date.now();
+      const ONE_DAY = 24 * 60 * 60 * 1000;
+
+      if (!lastFreeSpin) {
+          setCanFreeSpin(true);
+          setExtraSpinsUsed(0);
+          localStorage.setItem('qvasun_extra_spins', '0');
+          setTimeUntilNext('');
+      } else {
+          const lastTime = parseInt(lastFreeSpin);
+          const diff = now - lastTime;
+          
+          if (diff >= ONE_DAY) {
+              setCanFreeSpin(true);
+              setExtraSpinsUsed(0);
+              localStorage.setItem('qvasun_extra_spins', '0');
+              setTimeUntilNext('');
+          } else {
+              setCanFreeSpin(false);
+              setExtraSpinsUsed(extraUsed);
+              
+              // Format Countdown
+              const remaining = ONE_DAY - diff;
+              const h = Math.floor(remaining / (1000 * 60 * 60));
+              const m = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+              const s = Math.floor((remaining % (1000 * 60)) / 1000);
+              setTimeUntilNext(`${h}h ${m}m ${s}s`);
+          }
+      }
+  };
+
+  const handleWatchAd = () => {
+      if (extraSpinsUsed >= 6) return;
+
+      const link = AD_LINKS[extraSpinsUsed] || AD_LINKS[0];
+      window.open(link, '_blank');
+      
+      setIsWatchingAd(true);
+      setAdTimer(10);
+
+      const timer = setInterval(() => {
+          setAdTimer(prev => {
+              if (prev <= 1) {
+                  clearInterval(timer);
+                  setIsWatchingAd(false);
+                  setReadyToSpinExtra(true);
+                  return 0;
+              }
+              return prev - 1;
+          });
+      }, 1000);
+  };
 
   const spinWheel = () => {
     if (mustSpin) return;
     setMustSpin(true);
     setResult(null);
 
-    // Wheel Setup:
-    // Segments are distributed equally.
-    // 0deg is Top.
-    // Segments are rendered in order.
-    // Segment i center angle: (i + 0.5) * (360 / N)
-    
+    // Wheel Setup Logic...
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
     const randomIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
     const selectedSegment = WHEEL_SEGMENTS[randomIndex];
 
-    // To bring Segment i to the Top (0deg), we need to rotate the wheel backwards by its center angle.
-    // Center Angle of Selected Segment
     const centerAngle = (randomIndex + 0.5) * segmentAngle;
-    
-    // Target Rotation:
-    // Add 5 full spins (1800 deg)
-    // Rotate so that centerAngle moves to 0 deg.
-    // 0 = (Current + Rotation) % 360.
-    // We want the final rotation % 360 to be (360 - centerAngle).
-    
-    // Add randomness (Jitter)
-    // Keep jitter within +/- 40% of the segment width to avoid edge cases where it points to the line.
     const safeZone = segmentAngle * 0.4; 
-    const jitter = (Math.random() * safeZone * 2) - safeZone; // -safeZone to +safeZone
-
+    const jitter = (Math.random() * safeZone * 2) - safeZone;
     const targetRotation = 360 * 5 + (360 - centerAngle) + jitter;
-    
-    // We add to existing rotation to keep spinning continuously
     const finalRotation = rotation + targetRotation;
     
     setRotation(finalRotation);
@@ -223,18 +288,32 @@ export const SpinWheel: React.FC<{ onClose: () => void, onReward: (coins: number
       setMustSpin(false);
       setResult(selectedSegment);
       
+      // Update Logic after spin completes
+      if (canFreeSpin) {
+          localStorage.setItem('qvasun_last_free_spin', Date.now().toString());
+          setCanFreeSpin(false);
+          checkAvailability(); // Update UI immediately
+      } else if (readyToSpinExtra) {
+          const newExtra = extraSpinsUsed + 1;
+          localStorage.setItem('qvasun_extra_spins', newExtra.toString());
+          setExtraSpinsUsed(newExtra);
+          setReadyToSpinExtra(false);
+      }
+      
       if (selectedSegment.value > 0) {
-        // Win Coins
         setTimeout(() => onReward(selectedSegment.value), 1000);
       } else if (selectedSegment.value === 0) {
-        // Nada - Redirect
         setTimeout(() => {
            window.location.href = 'https://t.co/0NFBrp6ZwV';
         }, 1500);
       }
-      // If -1 (Retry), user can just spin again, no auto close
-    }, 4000); // Match transition duration
+    }, 4000); 
   };
+
+  // Determine Button State
+  const isButtonDisabled = mustSpin || (!canFreeSpin && !readyToSpinExtra) || (result !== null && result.value !== -1);
+  const showAdButton = !canFreeSpin && !readyToSpinExtra && extraSpinsUsed < 6 && result === null;
+  const showCountdown = !canFreeSpin && extraSpinsUsed >= 6;
 
   // Create conic gradient string
   const gradient = `conic-gradient(
@@ -246,10 +325,10 @@ export const SpinWheel: React.FC<{ onClose: () => void, onReward: (coins: number
   )`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 backdrop-blur-sm p-4 animate-fade-in">
        <div className="relative w-full max-w-sm flex flex-col items-center">
-          <button onClick={onClose} className="absolute -top-12 right-0 text-white hover:text-gray-300">
-            <X size={32} />
+          <button onClick={onClose} className="absolute -top-12 right-0 text-white hover:text-gray-300 bg-white/10 p-2 rounded-full backdrop-blur-md">
+            <X size={24} />
           </button>
 
           <div className="mb-4 text-center text-white">
@@ -257,18 +336,18 @@ export const SpinWheel: React.FC<{ onClose: () => void, onReward: (coins: number
             <p className="text-sm opacity-80">¡Gira y gana QvaCoins!</p>
           </div>
 
-          <div className="relative w-72 h-72 sm:w-80 sm:h-80">
+          <div className="relative w-72 h-72 sm:w-80 sm:h-80 mb-6">
              {/* Pointer */}
              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-4 z-20 w-8 h-10 bg-white shadow-lg" 
                   style={{clipPath: 'polygon(100% 0, 0 0, 50% 100%)'}}></div>
              
              {/* Wheel */}
              <div 
-                className="w-full h-full rounded-full border-4 border-white shadow-2xl relative overflow-hidden transition-transform cubic-bezier(0.2, 0.8, 0.2, 1)"
+                className="w-full h-full rounded-full border-4 border-white shadow-2xl relative overflow-hidden"
                 style={{
                   background: gradient,
                   transform: `rotate(${rotation}deg)`,
-                  transitionDuration: '4s'
+                  transition: mustSpin ? 'transform 4s cubic-bezier(0.2, 0.8, 0.2, 1)' : 'none'
                 }}
              >
                 {/* Labels */}
@@ -279,7 +358,7 @@ export const SpinWheel: React.FC<{ onClose: () => void, onReward: (coins: number
                       key={i}
                       className="absolute top-1/2 left-1/2 text-white font-bold text-sm sm:text-base text-shadow-md origin-left"
                       style={{
-                        transform: `rotate(${angle - 90}deg) translate(20px, -50%)`, // Offset from center
+                        transform: `rotate(${angle - 90}deg) translate(20px, -50%)`,
                         width: '50%',
                         textAlign: 'center',
                         textShadow: '1px 1px 2px rgba(0,0,0,0.5)'
@@ -297,14 +376,68 @@ export const SpinWheel: React.FC<{ onClose: () => void, onReward: (coins: number
              </div>
           </div>
 
-          <button 
-            onClick={spinWheel}
-            disabled={mustSpin || (result?.value !== -1 && result !== null)} 
-            className={`mt-8 px-8 py-3 rounded-full font-bold text-xl shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2
-              ${mustSpin ? 'bg-gray-50 text-gray-300 cursor-not-allowed' : 'bg-gradient-to-r from-solar-500 to-orange-600 text-white'}`}
-          >
-             {mustSpin ? 'GIRANDO...' : result ? (result.value === -1 ? 'GIRAR DE NUEVO' : (result.value > 0 ? `¡GANASTE ${result.value}!` : 'NADA 😢')) : '¡GIRAR AHORA!'}
-          </button>
+          {/* Action Area */}
+          <div className="w-full flex flex-col items-center gap-3">
+             
+             {/* Countdown / Status Message */}
+             {!canFreeSpin && (
+                <div className="text-white text-center bg-slate-800/80 px-4 py-2 rounded-lg backdrop-blur-sm border border-slate-700">
+                    {extraSpinsUsed < 6 ? (
+                        <p className="text-xs text-gray-300">Giro diario usado. Próximo en: <span className="font-mono text-yellow-400">{timeUntilNext}</span></p>
+                    ) : (
+                        <div>
+                             <p className="text-sm font-bold text-red-400 mb-1">¡Límite alcanzado!</p>
+                             <div className="flex items-center gap-2 text-xs text-gray-300">
+                                 <Clock size={14}/> Vuelve en: <span className="font-mono text-white text-base">{timeUntilNext}</span>
+                             </div>
+                        </div>
+                    )}
+                </div>
+             )}
+
+             {/* AD BUTTON */}
+             {showAdButton && (
+                 <div className="w-full">
+                     <p className="text-white text-center text-sm mb-2 font-bold animate-pulse">¿Quieres girar de nuevo?</p>
+                     <button
+                        onClick={handleWatchAd}
+                        disabled={isWatchingAd}
+                        className={`w-full py-3 rounded-full font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all
+                            ${isWatchingAd 
+                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                                : 'bg-blue-600 text-white hover:bg-blue-500 hover:scale-105'
+                            }`}
+                     >
+                        {isWatchingAd ? (
+                            `Espera ${adTimer}s...`
+                        ) : (
+                            <>
+                                <PlayCircle size={24} /> VER ANUNCIO ({6 - extraSpinsUsed} Restantes)
+                            </>
+                        )}
+                     </button>
+                 </div>
+             )}
+
+             {/* SPIN BUTTON */}
+             {(!showAdButton && !showCountdown) && (
+                 <button 
+                    onClick={spinWheel}
+                    disabled={isButtonDisabled} 
+                    className={`w-full px-8 py-3 rounded-full font-bold text-xl shadow-lg transition-all transform flex items-center justify-center gap-2
+                    ${isButtonDisabled 
+                        ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                        : 'bg-gradient-to-r from-solar-500 to-orange-600 text-white hover:scale-105 active:scale-95'}`}
+                >
+                    {mustSpin 
+                        ? 'GIRANDO...' 
+                        : result 
+                            ? (result.value === -1 ? 'GIRAR DE NUEVO' : (result.value > 0 ? `¡GANASTE ${result.value}!` : 'NADA 😢')) 
+                            : (readyToSpinExtra ? '¡GIRAR AHORA!' : '¡GIRAR GRATIS!')
+                    }
+                </button>
+             )}
+          </div>
           
           {result && result.value > 0 && (
              <div className="absolute inset-0 pointer-events-none flex items-center justify-center">

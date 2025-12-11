@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, ShoppingBag, Wallet, User as UserIcon, Zap, Star, Search, Menu, MessageCircle, X, ChevronRight, ShoppingCart, Send, DollarSign, Plus, Copy, TrendingUp, Users, Link as LinkIcon, Lock, RotateCw, Filter, SlidersHorizontal, Check, CreditCard } from 'lucide-react';
+import { Home, ShoppingBag, Wallet, User as UserIcon, Zap, Star, Search, Menu, MessageCircle, X, ChevronRight, ShoppingCart, Send, DollarSign, Plus, Copy, TrendingUp, Users, Link as LinkIcon, Lock, RotateCw, Filter, SlidersHorizontal, Check, CreditCard, Sun } from 'lucide-react';
 import { MOCK_PRODUCTS, INVESTMENT_PLANS, RANDOM_REVIEW_DATA } from './constants';
-import { Product, CartItem, UserState, Order, UserInvestment, Review } from './types';
+import { Product, CartItem, UserState, Order, UserInvestment, Review, ToastMessage, ToastType } from './types';
 import VirtualCard from './components/VirtualCard';
 import { DailyCheckIn, FlashSaleBanner, SpinWheel } from './components/Gamification';
 import PaymentModal from './components/PaymentModal';
@@ -14,6 +14,7 @@ import Investments from './components/Investments';
 import AuthPage from './components/Auth';
 import CardManager from './components/CardManager';
 import { PushNotification } from './components/PushNotification';
+import { SystemToastContainer } from './components/SystemToast';
 
 // --- Shared Components ---
 
@@ -114,24 +115,92 @@ const HomePage: React.FC<{ products: Product[], onAdd: (p: Product) => void, onO
     <div className="pb-20 md:pb-0">
       <FlashSaleBanner />
       
-      {/* Hero */}
-      <div className="bg-slate-900 text-white p-8 md:p-16 relative overflow-hidden rounded-b-3xl md:rounded-3xl md:mx-4 md:mt-4 shadow-2xl group">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-solar-500 rounded-full filter blur-3xl opacity-20 transform translate-x-1/2 -translate-y-1/2 animate-pulse-fast"></div>
-        <div className="relative z-10 max-w-2xl animate-slide-up">
-          <h1 className="text-4xl md:text-6xl font-black italic mb-4 leading-tight drop-shadow-lg">POTENCIA<br/><span className="text-solar-400">TU VIDA</span></h1>
-          <p className="text-gray-300 mb-6 text-lg max-w-md leading-relaxed">Soluciones de energía solar de primera calidad con hasta 70% de descuento. Paga con Crypto, Ahorra con Sol.</p>
-          <div className="flex gap-3 flex-wrap">
-            <button onClick={() => onNavigate('shop')} className="bg-solar-500 text-black px-6 py-3 rounded-full font-bold hover:bg-white transition-all transform hover:scale-105 shadow-lg shadow-solar-500/20">Comprar Ahora</button>
-            <button onClick={onOpenDaily} className="bg-white/10 backdrop-blur-md px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-white/20 transition-all border border-white/10 hover:border-white/30">
-              <Zap size={18} className="fill-yellow-400 text-yellow-400 animate-pulse"/> Premio Diario
-            </button>
-            <button onClick={onOpenWheel} className="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg hover:shadow-purple-500/50 hover:-translate-y-1 transition-transform">
-              <RotateCw size={18} className="group-hover:animate-spin-slow"/> Ruleta
-            </button>
-             <button onClick={() => onNavigate('investments')} className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg hover:shadow-blue-500/50 hover:-translate-y-1 transition-transform">
-              <TrendingUp size={18} /> Inversiones
-            </button>
-          </div>
+      {/* Enhanced Animated Hero */}
+      <div className="bg-slate-900 text-white relative overflow-hidden rounded-b-[3rem] md:rounded-3xl md:mx-4 md:mt-4 shadow-2xl group min-h-[500px] flex items-center">
+        
+        {/* Animated Background Layers */}
+        <div className="absolute inset-0 z-0">
+            {/* Dark Base Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900"></div>
+            
+            {/* Hexagon Pattern Overlay (Solar Cells) */}
+            <div className="absolute inset-0 opacity-10" style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23F59E0B' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                backgroundSize: '30px 30px'
+            }}></div>
+
+            {/* Moving Sun Glow */}
+            <div className="absolute top-[-20%] right-[-10%] w-[500px] h-[500px] bg-solar-500 rounded-full blur-[100px] opacity-20 animate-[pulse_5s_ease-in-out_infinite]"></div>
+            <div className="absolute bottom-[-10%] left-[-10%] w-[400px] h-[400px] bg-blue-500 rounded-full blur-[100px] opacity-10 animate-[pulse_7s_ease-in-out_infinite]"></div>
+
+            {/* Energy Lines (Simulated Circuits) */}
+            <div className="absolute inset-0 opacity-20 overflow-hidden">
+                <div className="absolute top-1/4 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-solar-400 to-transparent animate-[shimmer_3s_infinite_linear]"></div>
+                <div className="absolute top-2/3 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-400 to-transparent animate-[shimmer_5s_infinite_linear]" style={{animationDelay: '1s'}}></div>
+            </div>
+
+            {/* Floating Particles */}
+            <div className="absolute top-10 right-20 w-3 h-3 bg-yellow-400 rounded-full blur-[2px] animate-bounce-slow"></div>
+            <div className="absolute bottom-20 left-10 w-2 h-2 bg-blue-400 rounded-full blur-[1px] animate-ping"></div>
+        </div>
+
+        {/* Content Container */}
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-8 py-12 md:py-20 flex flex-col md:flex-row items-center gap-8">
+            
+            {/* Text Content */}
+            <div className="flex-1 text-center md:text-left space-y-6">
+                <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-md px-4 py-1.5 rounded-full border border-white/20 animate-slide-up">
+                    <Sun size={16} className="text-yellow-400 animate-spin-slow" />
+                    <span className="text-xs font-bold tracking-wider text-yellow-100 uppercase">Energía del Futuro</span>
+                </div>
+
+                <h1 className="text-5xl md:text-7xl font-black italic leading-tight drop-shadow-2xl animate-slide-up" style={{animationDelay: '0.1s'}}>
+                    POTENCIA <br/>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-solar-300 via-solar-400 to-orange-500">TU VIDA</span>
+                </h1>
+                
+                <p className="text-gray-300 text-lg md:text-xl max-w-lg mx-auto md:mx-0 leading-relaxed animate-slide-up" style={{animationDelay: '0.2s'}}>
+                    Únete a la revolución solar. Paneles, Baterías y Kits con tecnología Blockchain. Ahorra dinero y cuida el planeta.
+                </p>
+
+                <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start pt-4 animate-slide-up" style={{animationDelay: '0.3s'}}>
+                    <button onClick={() => onNavigate('shop')} className="bg-gradient-to-r from-solar-500 to-orange-600 text-white px-8 py-4 rounded-full font-bold hover:shadow-lg hover:shadow-solar-500/40 transition-all transform hover:scale-105 active:scale-95 flex items-center justify-center gap-2">
+                        <ShoppingBag size={20} /> Comprar Ahora
+                    </button>
+                    <div className="flex gap-3 justify-center">
+                         <button onClick={onOpenDaily} className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 hover:bg-white/20 transition-all hover:scale-110 group tooltip-container">
+                             <Zap size={24} className="text-yellow-400 group-hover:fill-yellow-400 transition-colors" />
+                         </button>
+                         <button onClick={onOpenWheel} className="w-14 h-14 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 hover:bg-white/20 transition-all hover:scale-110 group">
+                             <RotateCw size={24} className="text-purple-400 group-hover:rotate-180 transition-transform duration-500" />
+                         </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Hero Image / Visual Element */}
+            <div className="flex-1 relative w-full max-w-sm md:max-w-md animate-slide-in-right hidden md:block" style={{animationDelay: '0.4s'}}>
+                <div className="relative z-10 transform hover:scale-105 transition-transform duration-500">
+                    {/* Simulated 3D Solar Panel Stack */}
+                    <div className="w-full aspect-square bg-gradient-to-tr from-blue-900 to-slate-800 rounded-3xl shadow-2xl border-4 border-slate-700/50 flex items-center justify-center relative overflow-hidden group">
+                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-30"></div>
+                        <Sun size={120} className="text-solar-500 drop-shadow-[0_0_30px_rgba(245,158,11,0.6)] animate-pulse-fast z-10" />
+                        
+                        {/* Reflection Glare */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                    </div>
+                    
+                    {/* Floating Badge */}
+                    <div className="absolute -bottom-6 -left-6 bg-white/90 backdrop-blur text-slate-900 p-4 rounded-2xl shadow-xl flex items-center gap-3 animate-bounce-slow">
+                        <div className="bg-green-100 p-2 rounded-full"><Check className="text-green-600" size={20}/></div>
+                        <div>
+                            <p className="text-xs font-bold text-gray-500 uppercase">Garantía</p>
+                            <p className="font-bold text-lg">25 Años</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
       </div>
 
@@ -354,7 +423,7 @@ const WalletPage: React.FC<{ user: UserState, onNavigate: (view: string) => void
                 <p className="text-xs text-gray-500 uppercase">Referidos</p>
                 <p className="text-3xl font-black text-trust-500 my-2">{user.referrals}</p>
                 <div className="flex items-center bg-gray-100 rounded px-2 py-1 max-w-full cursor-pointer hover:bg-gray-200 transition-colors" onClick={handleCopyRef}>
-                    <p className="text-[10px] text-gray-500 truncate flex-1 font-mono">{user.referralCode}</p>
+                    <p className="text-[10px] text-gray-500 truncate flex-1 font-mono">qvasun.com/ref/{user.referralCode}</p>
                     <button className="text-solar-600 ml-1"><Copy size={12}/></button>
                 </div>
                 {copied && <span className="text-[9px] text-green-500 text-center mt-1 animate-fade-in">¡Copiado!</span>}
@@ -600,10 +669,8 @@ const ChatSupport: React.FC<{ isOpen: boolean, onClose: () => void }> = ({ isOpe
 
 // --- Main Layout & App ---
 
-const App: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [user, setUser] = useState<UserState>({
+// Initial Default State used if LocalStorage is empty
+const INITIAL_USER: UserState = {
     usdtBalance: 1240.50,
     withdrawableBalance: 0,
     qvaCoins: 350,
@@ -620,16 +687,33 @@ const App: React.FC = () => {
     investments: [],
     reviewedProductIds: [],
     stockAlerts: [],
+    lastConnection: Date.now(),
     hasCard: false,
     cardBalance: 0,
     cardNumber: '',
     cvv: '',
     expiryDate: '',
     cardBlocked: false
+};
+
+const App: React.FC = () => {
+  // State Initialization with Persistence
+  const [user, setUser] = useState<UserState>(() => {
+      const savedUser = localStorage.getItem('qvasun_user');
+      return savedUser ? JSON.parse(savedUser) : INITIAL_USER;
+  });
+
+  const [cart, setCart] = useState<CartItem[]>(() => {
+      const savedCart = localStorage.getItem('qvasun_cart');
+      return savedCart ? JSON.parse(savedCart) : [];
   });
   
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+      return localStorage.getItem('qvasun_auth') === 'true';
+  });
+
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
   const [showDaily, setShowDaily] = useState(false);
   const [showWheel, setShowWheel] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
@@ -637,6 +721,144 @@ const App: React.FC = () => {
   const [currentView, setCurrentView] = useState('home');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [cartAnimating, setCartAnimating] = useState(false);
+  
+  // Toast System State
+  const [toasts, setToasts] = useState<ToastMessage[]>([]);
+
+  // Add Toast Helper
+  const addToast = (message: string, type: ToastType = 'info') => {
+      const id = Date.now().toString();
+      setToasts(prev => [...prev, { id, message, type }]);
+  };
+  
+  const removeToast = (id: string) => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+  };
+
+  // --- Persistence Effects ---
+  useEffect(() => {
+      localStorage.setItem('qvasun_user', JSON.stringify(user));
+  }, [user]);
+
+  useEffect(() => {
+      localStorage.setItem('qvasun_cart', JSON.stringify(cart));
+  }, [cart]);
+
+  useEffect(() => {
+      localStorage.setItem('qvasun_auth', String(isAuthenticated));
+  }, [isAuthenticated]);
+
+  // --- Simulation Engine (Time & ROI) ---
+  useEffect(() => {
+      // 1. Calculate Offline Earnings (Investments) on Mount
+      const now = Date.now();
+      const lastCheck = user.lastConnection || now;
+      const elapsedMs = now - lastCheck;
+      
+      // Calculate earnings for the elapsed time (simulated: 1 minute real time = 1 hour simulated for faster gratification?)
+      // Let's stick to real-time ROI calculation for realism, but maybe check every 5 seconds.
+      // Actually, standard ROI is daily. To make it "feel" live, we calculate it continuously.
+      
+      const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+      
+      // Calculate earnings from active investments
+      let totalEarned = 0;
+      const updatedInvestments = user.investments.map(inv => {
+          if(inv.status === 'active') {
+             // Basic linear calculation: (Amount * Daily% / 100) * (Elapsed / OneDay)
+             // We return QvaCoins.
+             const plan = INVESTMENT_PLANS.find(p => p.id === inv.planId);
+             if(plan) {
+                 const dailyReturn = (inv.amountInvested * plan.dailyRoiPercent) / 100;
+                 const earnedInPeriod = (dailyReturn * elapsedMs) / ONE_DAY_MS;
+                 
+                 // Since QvaCoins are integer usually, we keep float internally in user balance for precision or round it visually.
+                 // Let's assume we add to float balance.
+                 totalEarned += earnedInPeriod * 100; // Assuming 1 coin = 0.01 USD value approx, or just direct coin value. 
+                 // Wait, prompt said: "recibirá un X% de retorno... en Monedas QvaSun".
+                 // If I invest $100, 1% daily = $1. If 1 Coin = $0.01, then $1 = 100 Coins.
+                 // So we multiply dollar return by 100 to get coins.
+                 
+                 return { ...inv, totalEarnedCoins: inv.totalEarnedCoins + (earnedInPeriod * 100) };
+             }
+          }
+          return inv;
+      });
+
+      if (totalEarned > 0.1) { // Only update if significant
+          setUser(prev => ({
+              ...prev,
+              qvaCoins: prev.qvaCoins + totalEarned,
+              investments: updatedInvestments,
+              lastConnection: now
+          }));
+          addToast(`Has ganado ${(totalEarned).toFixed(2)} monedas por tus inversiones mientras no estabas.`, 'success');
+      }
+
+      // 2. Start Simulation Loop (Tick every 5 seconds)
+      const interval = setInterval(() => {
+          const currentTime = Date.now();
+          
+          setUser(prevUser => {
+              let ordersChanged = false;
+              let coinsGained = 0;
+              
+              // A. Update Orders
+              const updatedOrders = prevUser.orders.map(order => {
+                  const elapsedSinceOrder = currentTime - order.timestamp;
+                  
+                  // Simulation Rules:
+                  // 0 -> 30s: Processing
+                  // 30s -> 90s: Shipped
+                  // > 90s: Delivered
+                  
+                  if (order.status === 'procesando' && elapsedSinceOrder > 30000) {
+                      ordersChanged = true;
+                      addToast(`Tu pedido #${order.id.slice(0,6)} ha sido ENVIADO 🚚`, 'info');
+                      return { ...order, status: 'enviado' as const };
+                  }
+                  
+                  if (order.status === 'enviado' && elapsedSinceOrder > 90000) {
+                      ordersChanged = true;
+                      addToast(`Tu pedido #${order.id.slice(0,6)} ha sido ENTREGADO ✅`, 'success');
+                      return { ...order, status: 'entregado' as const, deliveredDate: new Date().toISOString() };
+                  }
+                  
+                  return order;
+              });
+
+              // B. Update Investment Earnings (Live Ticker)
+              // Calculate earnings for just this 5s tick
+              const tickDuration = 5000;
+              const tickInvestments = prevUser.investments.map(inv => {
+                  if (inv.status === 'active') {
+                      const plan = INVESTMENT_PLANS.find(p => p.id === inv.planId);
+                      if (plan) {
+                          const dailyReturn = (inv.amountInvested * plan.dailyRoiPercent) / 100;
+                          const earnedInTick = (dailyReturn * tickDuration) / ONE_DAY_MS;
+                          const coinsInTick = earnedInTick * 100;
+                          coinsGained += coinsInTick;
+                          return { ...inv, totalEarnedCoins: inv.totalEarnedCoins + coinsInTick };
+                      }
+                  }
+                  return inv;
+              });
+
+              if (!ordersChanged && coinsGained < 0.01) return prevUser;
+
+              return {
+                  ...prevUser,
+                  orders: updatedOrders,
+                  investments: tickInvestments,
+                  qvaCoins: prevUser.qvaCoins + coinsGained,
+                  lastConnection: currentTime
+              };
+          });
+
+      }, 5000);
+
+      return () => clearInterval(interval);
+  }, []); // Run effect once on mount, logic handles updates
 
   // Initialize Data and Generate Random Reviews on Mount
   useEffect(() => {
@@ -697,6 +919,7 @@ const App: React.FC = () => {
       }));
       setIsAuthenticated(true);
       setShowAuthModal(false);
+      addToast(`Bienvenido de nuevo, ${userInfo.name || 'Usuario'}`, 'success');
   };
   
   // Guard Helper
@@ -719,11 +942,13 @@ const App: React.FC = () => {
         });
         setCartAnimating(true);
         setTimeout(() => setCartAnimating(false), 500);
+        addToast("Producto agregado al carrito", 'success');
     });
   };
 
   const removeFromCart = (id: string) => {
       setCart(prev => prev.filter(i => i.id !== id));
+      addToast("Producto eliminado", 'info');
   };
   
   const updateCartQty = (id: string, delta: number) => {
@@ -740,6 +965,7 @@ const App: React.FC = () => {
       const newOrder: Order = {
           id: `ORD-${Date.now().toString().slice(-6)}`,
           date: new Date().toISOString().split('T')[0],
+          timestamp: Date.now(), // Critical for simulation
           total: finalAmount,
           items: [...cart],
           status: 'procesando'
@@ -752,7 +978,8 @@ const App: React.FC = () => {
           qvaCoins: prev.qvaCoins - coinsUsed + coinsEarned,
           orders: [newOrder, ...prev.orders]
       }));
-      alert(`¡Pago Completado! Pagado: $${finalAmount.toFixed(2)}. Usaste ${coinsUsed} Monedas. Ganaste ${coinsEarned} Monedas.`);
+      
+      addToast(`¡Pago Completado! Orden #${newOrder.id} creada.`, 'success');
       setCurrentView('wallet'); 
   };
 
@@ -764,6 +991,7 @@ const App: React.FC = () => {
           checkInStreak: newStreak,
           lastCheckInDate: today
       }));
+      addToast(`¡Has recibido ${coins} QvaCoins!`, 'success');
   };
 
   const handleWheelReward = (coins: number) => {
@@ -772,6 +1000,7 @@ const App: React.FC = () => {
           qvaCoins: prev.qvaCoins + coins
       }));
       setTimeout(() => setShowWheel(false), 2000);
+      addToast(`¡Ganaste ${coins} QvaCoins en la ruleta!`, 'success');
   };
 
   const handleInvestment = (amount: number, planId: string) => {
@@ -794,6 +1023,7 @@ const App: React.FC = () => {
           usdtBalance: prev.usdtBalance - amount,
           investments: [newInvestment, ...prev.investments]
       }));
+      addToast("Inversión activada. Empezarás a recibir ganancias en breve.", 'success');
   };
 
   // Card Actions
@@ -806,7 +1036,7 @@ const App: React.FC = () => {
           expiryDate: '10/28',
           cardBalance: 0
       }));
-      alert("¡Tarjeta VISA Virtual QvaSun creada con éxito!");
+      addToast("¡Tarjeta VISA Virtual QvaSun creada con éxito!", 'success');
   };
 
   const handleCardTopUp = (amount: number) => {
@@ -815,7 +1045,7 @@ const App: React.FC = () => {
           usdtBalance: prev.usdtBalance - amount,
           cardBalance: prev.cardBalance + amount
       }));
-      alert(`¡Recarga de $${amount.toFixed(2)} USDT exitosa!`);
+      addToast(`¡Recarga de $${amount.toFixed(2)} USDT exitosa!`, 'success');
   };
 
   const handleCardWithdraw = (amount: number) => {
@@ -824,7 +1054,7 @@ const App: React.FC = () => {
           usdtBalance: prev.usdtBalance + amount,
           cardBalance: prev.cardBalance - amount
       }));
-      alert(`¡Retiro de $${amount.toFixed(2)} USDT a Billetera exitoso!`);
+      addToast(`¡Retiro de $${amount.toFixed(2)} USDT a Billetera exitoso!`, 'success');
   };
 
   const handleSubmitReview = (productId: string, rating: number, comment: string) => {
@@ -872,7 +1102,7 @@ const App: React.FC = () => {
              });
           }
           
-          alert(`¡Reseña enviada! Has ganado ${rewardCoins} QvaCoins.`);
+          addToast(`¡Reseña enviada! Has ganado ${rewardCoins} QvaCoins.`, 'success');
       });
   };
 
@@ -883,8 +1113,10 @@ const App: React.FC = () => {
           let newAlerts;
           if (isSubscribed) {
               newAlerts = prev.stockAlerts.filter(id => id !== productId);
+              addToast("Suscripción cancelada", 'info');
           } else {
               newAlerts = [...prev.stockAlerts, productId];
+              // Toast already handled in component logic usually, but let's centralize or just update state
           }
           return { ...prev, stockAlerts: newAlerts };
       });
@@ -923,6 +1155,9 @@ const App: React.FC = () => {
   return (
       <div className="w-full md:max-w-7xl mx-auto bg-white min-h-screen shadow-2xl relative overflow-x-hidden">
         
+        {/* System Toasts Container */}
+        <SystemToastContainer toasts={toasts} removeToast={removeToast} />
+
         {/* Components integrated */}
         <PushNotification products={products} onProductClick={handleProductClick} />
         <SocialProofToast />
@@ -957,7 +1192,7 @@ const App: React.FC = () => {
                             <div className="w-5 h-5 rounded-full bg-yellow-400 border border-yellow-600 flex items-center justify-center">
                                 <span className="text-[8px] font-bold">Q</span>
                             </div>
-                            <span className="text-xs font-bold text-slate-700">{isAuthenticated ? user.qvaCoins : '0'}</span>
+                            <span className="text-xs font-bold text-slate-700">{isAuthenticated ? Math.floor(user.qvaCoins) : '0'}</span>
                         </div>
                         
                         <div className="flex items-center gap-3 border-l border-gray-200 pl-4">
@@ -1038,7 +1273,10 @@ const App: React.FC = () => {
                 <UserProfile 
                     user={user} 
                     onBack={() => setCurrentView('home')} 
-                    onUpdateUser={(updated) => setUser(prev => ({ ...prev, ...updated }))}
+                    onUpdateUser={(updated) => {
+                        setUser(prev => ({ ...prev, ...updated }));
+                        addToast("Perfil actualizado", 'success');
+                    }}
                 />
             )}
 
