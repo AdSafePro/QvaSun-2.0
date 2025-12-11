@@ -88,13 +88,21 @@ export interface UserState {
   investments: UserInvestment[];
   reviewedProductIds: string[];
   stockAlerts: string[]; // IDs of products user subscribed to
+  // Card Fields
+  hasCard: boolean;
+  cardBalance: number;
+  cardNumber: string;
+  cvv: string;
+  expiryDate: string;
+  cardBlocked: boolean;
 }
 
 export interface Transaction {
   id: string;
-  type: 'deposito' | 'compra' | 'retiro' | 'recompensa' | 'intercambio' | 'inversion';
+  type: 'deposito' | 'compra' | 'retiro' | 'recompensa' | 'intercambio' | 'inversion' | 'tarjeta_recarga' | 'tarjeta_gasto';
   amount: number;
   currency: 'USDT' | 'QvaCoin';
   status: 'completado' | 'pendiente' | 'fallido';
   date: string;
+  details?: string;
 }

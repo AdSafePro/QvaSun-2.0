@@ -129,10 +129,33 @@ export const DailyCheckIn: React.FC<GamificationProps> = ({ onClose, onReward, l
 };
 
 export const FlashSaleBanner: React.FC = () => {
+  // Start with 4 hours, 15 mins, 22 seconds in seconds
+  const [timeLeft, setTimeLeft] = useState(15322);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 86400)); // Reset to 24h if hits 0
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatTime = (totalSeconds: number) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <div className="bg-gradient-to-r from-urgency-600 via-solar-500 to-urgency-600 text-white text-center py-2 px-4 font-bold text-sm sm:text-base animate-pulse shadow-md relative overflow-hidden">
+    <div className="bg-gradient-to-r from-urgency-600 via-solar-500 to-urgency-600 text-white text-center py-2 px-4 font-bold text-sm sm:text-base shadow-md relative overflow-hidden cursor-pointer group hover:brightness-110 transition-all">
       <div className="absolute top-0 left-0 w-full h-full bg-white opacity-10 transform -skew-x-12 translate-x-full animate-shimmer"></div>
-      ⚡ OFERTA RELÁMPAGO TERMINA EN 02:14:59 - ¡HASTA 80% OFF! ⚡
+      <div className="flex justify-center items-center gap-2 flex-wrap">
+          <span className="animate-pulse">⚡ OFERTA RELÁMPAGO TERMINA EN</span>
+          <span className="font-mono bg-black/20 px-2 py-0.5 rounded text-yellow-200 min-w-[80px] inline-block">
+             {formatTime(timeLeft)}
+          </span>
+          <span className="animate-pulse">- ¡HASTA 80% OFF! ⚡</span>
+      </div>
     </div>
   );
 };
@@ -164,26 +187,37 @@ export const SpinWheel: React.FC<{ onClose: () => void, onReward: (coins: number
     setMustSpin(true);
     setResult(null);
 
-    // Calculate a random segment
-    // Total segments = 7. Each is ~51.4 degrees.
+    // Wheel Setup:
+    // Segments are distributed equally.
+    // 0deg is Top.
+    // Segments are rendered in order.
+    // Segment i center angle: (i + 0.5) * (360 / N)
+    
     const segmentAngle = 360 / WHEEL_SEGMENTS.length;
     const randomIndex = Math.floor(Math.random() * WHEEL_SEGMENTS.length);
     const selectedSegment = WHEEL_SEGMENTS[randomIndex];
 
-    // Calculate rotation to land on that segment
-    // We add extra rotations (360 * 5) for effect
-    // To land on index i, we need to rotate backwards or calculate offset.
-    // simpler: current rotation + 5 spins + offset to target.
-    // 0 deg is top. If index 0 is at 0-51 deg.
-    // Let's assume the wheel starts with segment 0 at the top-right.
+    // To bring Segment i to the Top (0deg), we need to rotate the wheel backwards by its center angle.
+    // Center Angle of Selected Segment
+    const centerAngle = (randomIndex + 0.5) * segmentAngle;
     
-    // Random jitter within the segment
-    const jitter = Math.floor(Math.random() * (segmentAngle - 2)) + 1;
+    // Target Rotation:
+    // Add 5 full spins (1800 deg)
+    // Rotate so that centerAngle moves to 0 deg.
+    // 0 = (Current + Rotation) % 360.
+    // We want the final rotation % 360 to be (360 - centerAngle).
     
-    // Target rotation
-    const newRotation = rotation + 1800 + (360 - (randomIndex * segmentAngle)) - (segmentAngle/2) + jitter;
+    // Add randomness (Jitter)
+    // Keep jitter within +/- 40% of the segment width to avoid edge cases where it points to the line.
+    const safeZone = segmentAngle * 0.4; 
+    const jitter = (Math.random() * safeZone * 2) - safeZone; // -safeZone to +safeZone
+
+    const targetRotation = 360 * 5 + (360 - centerAngle) + jitter;
     
-    setRotation(newRotation);
+    // We add to existing rotation to keep spinning continuously
+    const finalRotation = rotation + targetRotation;
+    
+    setRotation(finalRotation);
 
     setTimeout(() => {
       setMustSpin(false);
@@ -267,7 +301,7 @@ export const SpinWheel: React.FC<{ onClose: () => void, onReward: (coins: number
             onClick={spinWheel}
             disabled={mustSpin || (result?.value !== -1 && result !== null)} 
             className={`mt-8 px-8 py-3 rounded-full font-bold text-xl shadow-lg transition-all transform hover:scale-105 active:scale-95 flex items-center gap-2
-              ${mustSpin ? 'bg-gray-500 text-gray-300 cursor-not-allowed' : 'bg-gradient-to-r from-solar-500 to-orange-600 text-white'}`}
+              ${mustSpin ? 'bg-gray-50 text-gray-300 cursor-not-allowed' : 'bg-gradient-to-r from-solar-500 to-orange-600 text-white'}`}
           >
              {mustSpin ? 'GIRANDO...' : result ? (result.value === -1 ? 'GIRAR DE NUEVO' : (result.value > 0 ? `¡GANASTE ${result.value}!` : 'NADA 😢')) : '¡GIRAR AHORA!'}
           </button>

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, ShoppingBag, Wallet, User as UserIcon, Zap, Star, Search, Menu, MessageCircle, X, ChevronRight, ShoppingCart, Send, DollarSign, Plus, Copy, TrendingUp, Users, Link as LinkIcon, Lock, RotateCw, Filter, SlidersHorizontal, Check } from 'lucide-react';
+import { Home, ShoppingBag, Wallet, User as UserIcon, Zap, Star, Search, Menu, MessageCircle, X, ChevronRight, ShoppingCart, Send, DollarSign, Plus, Copy, TrendingUp, Users, Link as LinkIcon, Lock, RotateCw, Filter, SlidersHorizontal, Check, CreditCard } from 'lucide-react';
 import { MOCK_PRODUCTS, INVESTMENT_PLANS, RANDOM_REVIEW_DATA } from './constants';
 import { Product, CartItem, UserState, Order, UserInvestment, Review } from './types';
 import VirtualCard from './components/VirtualCard';
@@ -12,6 +12,7 @@ import ProductDetails from './components/ProductDetails';
 import UserProfile from './components/UserProfile';
 import Investments from './components/Investments';
 import AuthPage from './components/Auth';
+import CardManager from './components/CardManager';
 import { PushNotification } from './components/PushNotification';
 
 // --- Shared Components ---
@@ -618,7 +619,13 @@ const App: React.FC = () => {
     orders: [],
     investments: [],
     reviewedProductIds: [],
-    stockAlerts: [] // Initial empty alerts
+    stockAlerts: [],
+    hasCard: false,
+    cardBalance: 0,
+    cardNumber: '',
+    cvv: '',
+    expiryDate: '',
+    cardBlocked: false
   });
   
   const [products, setProducts] = useState<Product[]>([]);
@@ -789,6 +796,37 @@ const App: React.FC = () => {
       }));
   };
 
+  // Card Actions
+  const handleCreateCard = () => {
+      setUser(prev => ({
+          ...prev,
+          hasCard: true,
+          cardNumber: '4288 1234 5678 9010',
+          cvv: '882',
+          expiryDate: '10/28',
+          cardBalance: 0
+      }));
+      alert("¡Tarjeta VISA Virtual QvaSun creada con éxito!");
+  };
+
+  const handleCardTopUp = (amount: number) => {
+      setUser(prev => ({
+          ...prev,
+          usdtBalance: prev.usdtBalance - amount,
+          cardBalance: prev.cardBalance + amount
+      }));
+      alert(`¡Recarga de $${amount.toFixed(2)} USDT exitosa!`);
+  };
+
+  const handleCardWithdraw = (amount: number) => {
+      setUser(prev => ({
+          ...prev,
+          usdtBalance: prev.usdtBalance + amount,
+          cardBalance: prev.cardBalance - amount
+      }));
+      alert(`¡Retiro de $${amount.toFixed(2)} USDT a Billetera exitoso!`);
+  };
+
   const handleSubmitReview = (productId: string, rating: number, comment: string) => {
       requireAuth(() => {
           const rewardCoins = 3;
@@ -895,7 +933,7 @@ const App: React.FC = () => {
         )}
 
         {/* Top Header - Responsive */}
-        {currentView !== 'product-detail' && currentView !== 'profile' && currentView !== 'investments' && (
+        {currentView !== 'product-detail' && currentView !== 'profile' && currentView !== 'investments' && currentView !== 'card-manager' && (
             <header className="sticky top-0 w-full bg-white/95 backdrop-blur-sm z-40 border-b border-gray-100 px-4 py-3 transition-all animate-fade-in">
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-2 cursor-pointer group" onClick={() => setCurrentView('home')}>
@@ -910,7 +948,8 @@ const App: React.FC = () => {
                         <button onClick={() => setCurrentView('home')} className={`text-sm font-bold transition-all hover:scale-105 ${currentView === 'home' ? 'text-solar-600' : 'text-slate-600 hover:text-solar-600'}`}>Inicio</button>
                         <button onClick={() => setCurrentView('shop')} className={`text-sm font-bold transition-all hover:scale-105 ${currentView === 'shop' ? 'text-solar-600' : 'text-slate-600 hover:text-solar-600'}`}>Tienda</button>
                         <button onClick={() => requireAuth(() => setCurrentView('wallet'))} className={`text-sm font-bold transition-all hover:scale-105 ${currentView === 'wallet' ? 'text-solar-600' : 'text-slate-600 hover:text-solar-600'}`}>Billetera</button>
-                         <button onClick={() => requireAuth(() => setCurrentView('investments'))} className={`text-sm font-bold transition-all hover:scale-105 ${currentView === 'investments' ? 'text-solar-600' : 'text-slate-600 hover:text-solar-600'}`}>Inversiones</button>
+                        <button onClick={() => requireAuth(() => setCurrentView('investments'))} className={`text-sm font-bold transition-all hover:scale-105 ${currentView === 'investments' ? 'text-solar-600' : 'text-slate-600 hover:text-solar-600'}`}>Inversiones</button>
+                        <button onClick={() => requireAuth(() => setCurrentView('card-manager'))} className={`text-sm font-bold transition-all hover:scale-105 ${currentView === 'card-manager' ? 'text-solar-600' : 'text-slate-600 hover:text-solar-600'}`}>Tarjeta</button>
                     </div>
 
                     <div className="flex items-center gap-4">
@@ -944,7 +983,7 @@ const App: React.FC = () => {
                     onOpenDaily={() => requireAuth(() => setShowDaily(true))} 
                     onOpenWheel={() => requireAuth(() => setShowWheel(true))}
                     onNavigate={(view) => {
-                         if (view === 'investments' || view === 'wallet') {
+                         if (['investments', 'wallet', 'card-manager'].includes(view)) {
                              requireAuth(() => setCurrentView(view));
                          } else {
                              setCurrentView(view);
@@ -968,6 +1007,21 @@ const App: React.FC = () => {
             )}
             
             {currentView === 'wallet' && <WalletPage user={user} onNavigate={(view) => requireAuth(() => setCurrentView(view))} />}
+            
+            {currentView === 'card-manager' && (
+                <>
+                  <div className="bg-white sticky top-0 z-30 shadow-sm p-4 flex items-center gap-4">
+                     <button onClick={() => setCurrentView('home')}><ChevronRight size={24} className="rotate-180 text-slate-800"/></button>
+                     <h1 className="text-xl font-bold text-slate-900">Tarjeta Virtual</h1>
+                  </div>
+                  <CardManager 
+                      user={user} 
+                      onCreateCard={handleCreateCard}
+                      onTopUp={handleCardTopUp}
+                      onWithdraw={handleCardWithdraw}
+                  />
+                </>
+            )}
             
             {currentView === 'product-detail' && selectedProduct && (
                 <ProductDetails 
@@ -998,17 +1052,18 @@ const App: React.FC = () => {
         </div>
 
         {/* Mobile Bottom Nav (Hidden on Desktop) */}
-        {currentView !== 'product-detail' && currentView !== 'profile' && currentView !== 'investments' && (
+        {currentView !== 'product-detail' && currentView !== 'profile' && currentView !== 'investments' && currentView !== 'card-manager' && (
             <nav className="fixed bottom-0 w-full bg-white border-t border-gray-200 h-16 flex justify-around items-center z-40 pb-safe md:hidden animate-slide-up">
                 <NavLink view="home" icon={Home} label="Inicio" />
                 <NavLink view="shop" icon={Search} label="Tienda" />
+                <NavLink view="card-manager" icon={CreditCard} label="Tarjeta" protectedView={true} />
                 <NavLink view="cart" icon={ShoppingBag} label="Carrito" />
                 <NavLink view="wallet" icon={Wallet} label="Billetera" protectedView={true} />
             </nav>
         )}
 
         {/* Floating Cart Button (Mobile Only since Desktop has it in header) */}
-        {currentView !== 'cart' && currentView !== 'product-detail' && currentView !== 'profile' && currentView !== 'investments' && (
+        {currentView !== 'cart' && currentView !== 'product-detail' && currentView !== 'profile' && currentView !== 'investments' && currentView !== 'card-manager' && (
             <div className="md:hidden">
                 <FloatingCart count={cartCount} onClick={() => setCurrentView('cart')} animating={cartAnimating} />
             </div>
